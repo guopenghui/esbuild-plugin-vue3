@@ -1,6 +1,6 @@
 {
-  "name": "esbuild-plugin-vue3-jsx",
-  "version": "0.3.0",
+  "name": "@the_tree/esbuild-plugin-vue3",
+  "version": "0.3.1",
   "description": "",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,7 +11,7 @@
   },
   "author": "the_tree",
   "license": "MIT",
-  "repository": "github:guopenghui/esbuild-plugin-vue3-jsx",
+  "repository": "github:guopenghui/esbuild-plugin-vue3",
   "dependencies": {
 		"@babel/core": "^7.20.5",
 		"@babel/plugin-syntax-import-meta": "^7.10.4",

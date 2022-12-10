@@ -1,6 +1,8 @@
-# esbuild-plugin-vue3
+# @the_tree/esbuild-plugin-vue3
 
-[![npm version](https://badge.fury.io/js/esbuild-plugin-vue3.svg)](https://badge.fury.io/js/esbuild-plugin-vue3)
+[![npm version](https://badge.fury.io/js/@the_tree%2Fesbuild-plugin-vue3.svg)](https://badge.fury.io/js/@the_tree%2Fesbuild-plugin-vue3)
+
+This is a fork of [esbuild-plugin-vue3](https://github.com/pipe01/esbuild-plugin-vue3)
 
 [esbuild](https://esbuild.github.io/) plugin for resolving and loading Vue.js 3 SFCs.
 This plugin is meant to mimick the default [Vue CLI](https://cli.vuejs.org/) behaviour, for example it supports path aliases defined in the tsconfig.json file.
@@ -8,13 +10,14 @@ This plugin is meant to mimick the default [Vue CLI](https://cli.vuejs.org/) beh
 ## Install:
 
 ```
-npm i -D esbuild-plugin-vue3
+npm i -D @the_tree/esbuild-plugin-vue3
 ```
 
 ## Supported
 * HTML and Pug `<template>`
 * JavaScript and TypeScript `<script>` and `<script setup>` (the latter is still experimental)
 * CSS, SCSS and SASS `<style>`
+* Tsx files
 * Path aliases from tsconfig.json, e.g. `import "@/Component.vue"` resolves to `import "../../Component.vue`
 * Emit HTML file and inject output CSS and JS files
 
@@ -55,5 +58,7 @@ esbuild.build({
     })]
 })
 ```
+
+For more options see `src/options.ts`
 
 ### The library is still not thoroughly tested, use at your own risk.
