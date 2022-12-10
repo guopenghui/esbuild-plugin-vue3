@@ -64,4 +64,9 @@ export type Options = {
         options?: any;
         plugins?: any[];
     };
+
+    /**
+     * Use production mode
+     */
+    isProd?: boolean;
 };

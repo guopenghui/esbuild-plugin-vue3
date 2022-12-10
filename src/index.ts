@@ -26,7 +26,8 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
         buildOpts.define = {
             ...buildOpts.define,
             "__VUE_OPTIONS_API__": opts.disableOptionsApi ? "false" : "true",
-            "__VUE_PROD_DEVTOOLS__": opts.enableDevTools ? "true" : "false"
+            "__VUE_PROD_DEVTOOLS__": opts.enableDevTools ? "true" : "false",
+            "process.env.NODE_ENV": process.env.NODE_ENV === 'production' || opts.isProd ? "'production'" : "'development'"
         };
 
         if (opts.generateHTML && !buildOpts.metafile) {
@@ -125,6 +126,20 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             };
         });
 
+        // Load .tsx/.jsx file
+        build.onLoad({ filter: /\.[tj]sx$/ }, (args) => cache.get([args.path, args.namespace], async () => {
+            const source = await fs.promises.readFile(args.path, "utf-8");
+            let res = await transformVue3(source, "", {});
+            if (!res?.code) {
+                return;
+            }
+            return {
+                contents: res.code,
+                resolveDir: path.dirname(args.path),
+                watchFiles: [args.path]
+            };
+        }));
+
         // Load stub when .vue is requested
         build.onLoad({ filter: /\.vue$/ }, (args) => cache.get([args.path, args.namespace], async () => {
             const encPath = args.path.replace(/\\/g, "\\\\");
@@ -182,15 +197,27 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             if (script) {
                 let code = script.content;
 
+                if (!script.lang || !["ts", "tsx", "js", "jsx"].includes(script.lang)) {
+                    throw new Error(`Fail to resolve script type in ${args.path}`);
+                }
+
                 if (buildOpts.sourcemap && script.map) {
                     const sourceMap = Buffer.from(JSON.stringify(script.map)).toString("base64");
 
                     code += "\n\n//@ sourceMappingURL=data:application/json;charset=utf-8;base64," + sourceMap;
                 }
 
+                if (script.lang?.match(/[tj]sx/)) {
+                    let res = await transformVue3(code, "", {});
+                    if (!res) {
+                        throw new Error(`Fail to transform vue script to ${script.lang} in ${args.path}`);
+                    }
+                    code = res.code;
+                }
+
                 return {
                     contents: code,
-                    loader: script.lang === "ts" ? "ts" : "js",
+                    loader: ["ts", "tsx"].includes(script.lang) ? "ts" : "js",
                     resolveDir: path.dirname(args.path),
                 };
             }
