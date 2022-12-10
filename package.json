@@ -1,5 +1,5 @@
 {
-  "name": "esbuild-plugin-vue3",
+  "name": "esbuild-plugin-vue3-jsx",
   "version": "0.3.0",
   "description": "",
   "main": "./dist/index.js",
@@ -9,10 +9,14 @@
     "build:ts": "tsc",
     "prepare": "npm-run-all --serial --print-label build:*"
   },
-  "author": "pipe01",
+  "author": "the_tree",
   "license": "MIT",
-  "repository": "github:pipe01/esbuild-plugin-vue3",
+  "repository": "github:guopenghui/esbuild-plugin-vue3-jsx",
   "dependencies": {
+		"@babel/core": "^7.20.5",
+		"@babel/plugin-syntax-import-meta": "^7.10.4",
+		"@babel/plugin-transform-typescript": "^7.20.2",
+    "@vue/babel-plugin-jsx": "^1.1.1",
     "@vue/compiler-core": "^3.2.26",
     "@vue/compiler-sfc": "^3.2.26",
     "esbuild": "^0.14.8",
@@ -23,10 +27,11 @@
     "plugin",
     "vue",
     "vue3",
-    "sfc"
+    "sfc",
+    "jsx"
   ],
   "peerDependencies": {
-    "cheerio": "^1.0.0-rc.10",
+    "cheerio": "1.0.0-rc.10",
     "html-minifier": "^4.0.0",
     "pug": "^3.0.2",
     "sass": "^1.35.2"
@@ -47,11 +52,14 @@
   },
   "devDependencies": {
     "@babel/types": "^7.16.0",
+    "@types/node": "^16.11.6",
+    "@types/babel__core": "^7.1.20",
     "@types/html-minifier": "^4.0.1",
     "@types/pug": "^2.0.5",
     "@types/sass": "^1.43.1",
     "npm-run-all": "^4.1.5",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "@types/cheerio": "^0.22.31"
   },
   "files": [
     "dist/*.js",

@@ -8,7 +8,7 @@ export type IndexOptions = {
      * Path to the original HTML file that will be modified.
      */
     sourceFile: string;
-    
+
     /**
      * Path where the modified HTML file will be written to. By default this is an index.html file in the outdir or next to the outfile.
      */
@@ -43,7 +43,7 @@ export type IndexOptions = {
      * When minifying, these options will be passed to html-minifier.
      */
     minifyOptions?: import("html-minifier").Options;
-}
+};
 
 export async function generateIndexHTML(result: BuildResult, opts: IndexOptions, min: boolean) {
     if (!result.metafile) {
@@ -52,18 +52,18 @@ export async function generateIndexHTML(result: BuildResult, opts: IndexOptions,
     if (!opts.outFile) {
         throw new Error("No outFile was specified and it could not be inferred from the build options");
     }
-    
+
     const cheerio = await tryImport(() => import("cheerio"), "cheerio", "HTML generation");
 
     const $ = cheerio.load(await fs.promises.readFile(opts.sourceFile));
 
     if (opts.preload) {
         for (const item of opts.preload) {
-            const link = $("<link>")
+            const link = $("<link>");
             link.attr("rel", item.prefetch ? "prefetch" : "preload");
             link.attr("href", item.href);
             link.attr("as", item.as);
-            link.insertAfter($("head :last-child"))
+            link.insertAfter($("head :last-child"));
         }
     }
 
@@ -85,16 +85,16 @@ export async function generateIndexHTML(result: BuildResult, opts: IndexOptions,
             script.attr("src", name);
             script.insertAfter($("body :last-child"));
         } else if (ext === ".css") {
-            const link = $("<link rel='stylesheet'>")
+            const link = $("<link rel='stylesheet'>");
             link.attr("href", name);
-            link.insertAfter($("head :last-child"))
+            link.insertAfter($("head :last-child"));
         }
     }
 
     let html = $.html();
 
     if (min) {
-        const { minify } = await tryImport(() => import("html-minifier"), "html-minifier", "HTML minification")
+        const { minify } = await tryImport(() => import("html-minifier"), "html-minifier", "HTML minification");
 
         html = minify(html, {
             collapseWhitespace: true,

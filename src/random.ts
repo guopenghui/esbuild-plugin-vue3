@@ -1,15 +1,15 @@
 // https://github.com/mafintosh/random-bytes-seed/blob/6eb86c4746907d4430ac46d64fe5f17ef10502ba/index.js
 
-import { randomBytes as _randomBytes, createHash } from 'crypto'
-var randomBytesClassic = _randomBytes
+import { randomBytes as _randomBytes, createHash } from 'crypto';
+var randomBytesClassic = _randomBytes;
 
-export default function(seed: string | Buffer = randomBytesClassic(32)) {
+export default function (seed: string | Buffer = randomBytesClassic(32)) {
     randomBytes.seed = seed;
     randomBytes.currentSeed = seed;
 
     return randomBytes;
 
-    function randomBytes (n: number) {
+    function randomBytes(n: number) {
         var result = Buffer.allocUnsafe(n);
         var used = 0;
 
@@ -23,6 +23,6 @@ export default function(seed: string | Buffer = randomBytesClassic(32)) {
     }
 }
 
-function next (seed: string | Buffer) {
-  return createHash('sha256').update(seed).digest();
+function next(seed: string | Buffer) {
+    return createHash('sha256').update(seed).digest();
 }

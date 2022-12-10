@@ -6,17 +6,19 @@ import * as crypto from "crypto";
 import * as sfc from '@vue/compiler-sfc';
 import * as core from '@vue/compiler-core';
 
+
 import { loadRules, replaceRules } from "./paths";
-import { AsyncCache, fileExists, getFullPath, getUrlParams, tryAsync } from "./utils"
+import { AsyncCache, fileExists, getFullPath, getUrlParams, tryAsync } from "./utils";
 import { Options } from "./options";
 import { generateIndexHTML } from "./html";
 import randomBytes from "./random";
+import { transformVue3 } from "./compilers";
 
 type PluginData = {
     descriptor: sfc.SFCDescriptor;
     id: string;
     script?: sfc.SFCScriptBlock;
-}
+};
 
 const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
     name: "vue",
@@ -25,7 +27,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             ...buildOpts.define,
             "__VUE_OPTIONS_API__": opts.disableOptionsApi ? "false" : "true",
             "__VUE_PROD_DEVTOOLS__": opts.enableDevTools ? "true" : "false"
-        }
+        };
 
         if (opts.generateHTML && !buildOpts.metafile) {
             buildOpts.metafile = true;
@@ -33,7 +35,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
         if (opts.disableResolving) {
             opts.pathAliases = false;
-            build.onStart(() => ({warnings: [{text: "The disableResolving option is deprecated, use pathAliases instead"}]}));
+            build.onStart(() => ({ warnings: [{ text: "The disableResolving option is deprecated, use pathAliases instead" }] }));
         }
 
         const mustReplace = await loadRules(opts, buildOpts.tsconfig ?? "tsconfig.json");
@@ -53,7 +55,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                         value: dir.exp ?? core.createSimpleExpression("void 0", false),
                         loc: dir.loc,
                         type: 16
-                    }
+                    };
 
                     if (typeof propName === "function") {
                         transforms[name] = (...args) => {
@@ -61,12 +63,12 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
                             return {
                                 props: ret === undefined ? [] : [transformation(args[0], ret)]
-                            }
-                        }
+                            };
+                        };
                     } else {
                         transforms[name] = dir => ({
                             props: propName === false ? [] : [transformation(dir, propName)]
-                        })
+                        });
                     }
                 }
             }
@@ -80,26 +82,30 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 if (!await fileExists(fullPath)) {
                     const possible = [
                         ".ts",
+                        ".tsx",
                         "/index.ts",
+                        "/index.tsx",
                         ".js",
+                        ".jsx",
                         "/index.js",
-                    ]
+                        "/index.jsx",
+                    ];
 
                     for (const postfix of possible) {
                         if (await fileExists(fullPath + postfix)) {
                             return {
                                 path: path.normalize(fullPath + postfix),
                                 namespace: "file"
-                            }
+                            };
                         }
                     }
                 } else {
                     return {
                         path: path.normalize(fullPath),
                         namespace: "file"
-                    }
+                    };
                 }
-            })
+            });
         }
 
         // Resolve main ".vue" import
@@ -110,13 +116,13 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 path: getFullPath(args),
                 namespace:
                     params.type === "script" ? "sfc-script" :
-                    params.type === "template" ? "sfc-template" :
-                    params.type === "style" ? "sfc-style" : "file",
+                        params.type === "template" ? "sfc-template" :
+                            params.type === "style" ? "sfc-style" : "file",
                 pluginData: {
                     ...args.pluginData,
                     index: params.index
                 }
-            }
+            };
         });
 
         // Load stub when .vue is requested
@@ -125,7 +131,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
             const source = await fs.promises.readFile(args.path, 'utf8');
             const filename = path.relative(process.cwd(), args.path);
-            
+
             const id = !opts.scopeId || opts.scopeId === "hash"
                 ? crypto.createHash("md5").update(filename).digest().toString("hex").substring(0, 8)
                 : random(4).toString("hex");
@@ -139,18 +145,18 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             let code = "";
 
             if (descriptor.script || descriptor.scriptSetup) {
-                code += `import script from "${encPath}?type=script";`
+                code += `import script from "${encPath}?type=script";`;
             } else {
-                code += "const script = {};"
+                code += "const script = {};";
             }
 
             for (const style in descriptor.styles) {
-                code += `import "${encPath}?type=style&index=${style}";`
+                code += `import "${encPath}?type=style&index=${style}";`;
             }
 
             const renderFuncName = opts.renderSSR ? "ssrRender" : "render";
 
-            code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName};`
+            code += `import { ${renderFuncName} } from "${encPath}?type=template"; script.${renderFuncName} = ${renderFuncName};`;
 
             code += `script.__file = ${JSON.stringify(filename)};`;
             if (descriptor.styles.some(o => o.scoped)) {
@@ -159,15 +165,15 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             if (opts.renderSSR) {
                 code += "script.__ssrInlineRender = true;";
             }
-            
+
             code += "export default script;";
 
             return {
                 contents: code,
                 resolveDir: path.dirname(args.path),
                 pluginData: { descriptor, id: dataId, script } as PluginData,
-                watchFiles: [ args.path ]
-            }
+                watchFiles: [args.path]
+            };
         }));
 
         build.onLoad({ filter: /.*/, namespace: "sfc-script" }, (args) => cache.get([args.path, args.namespace], async () => {
@@ -178,7 +184,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
 
                 if (buildOpts.sourcemap && script.map) {
                     const sourceMap = Buffer.from(JSON.stringify(script.map)).toString("base64");
-                    
+
                     code += "\n\n//@ sourceMappingURL=data:application/json;charset=utf-8;base64," + sourceMap;
                 }
 
@@ -186,7 +192,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                     contents: code,
                     loader: script.lang === "ts" ? "ts" : "js",
                     resolveDir: path.dirname(args.path),
-                }
+                };
             }
         }));
 
@@ -199,7 +205,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             let source = descriptor.template.content;
 
             if (descriptor.template.lang === "pug") {
-                const pug = await tryAsync(() => import("pug"), "pug", "Pug template rendering")
+                const pug = await tryAsync(() => import("pug"), "pug", "Pug template rendering");
                 source = pug.render(descriptor.template.content);
 
                 // Fix #default="#default" and v-else="v-else"
@@ -233,7 +239,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                             lineText: o.loc.source
                         }
                     })
-                }
+                };
             }
 
             return {
@@ -241,11 +247,11 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 warnings: result.tips.map(o => ({ text: o })),
                 loader: "js",
                 resolveDir: path.dirname(args.path),
-            }
+            };
         }));
 
         build.onLoad({ filter: /.*/, namespace: "sfc-style" }, (args) => cache.get([args.path, args.namespace], async () => {
-            const { descriptor, index, id } = args.pluginData as PluginData & { index: number };
+            const { descriptor, index, id } = args.pluginData as PluginData & { index: number; };
 
             const style: import("@vue/compiler-sfc").SFCStyleBlock = descriptor.styles[index];
             let includedFiles: string[] = [];
@@ -266,10 +272,10 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                             const modulePath = path.join(process.cwd(), "node_modules", url);
 
                             if (fs.existsSync(modulePath)) {
-                                return { file: modulePath }
+                                return { file: modulePath };
                             }
 
-                            return null
+                            return null;
                         },
                         (url: string) => ({ file: replaceRules(url) })
                     ]
@@ -278,7 +284,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
             });
 
             if (result.errors.length > 0) {
-                const errors = result.errors as (Error & { column: number; line: number; file: string })[];
+                const errors = result.errors as (Error & { column: number; line: number; file: string; })[];
 
                 return {
                     errors: errors.map(o => ({
@@ -290,7 +296,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                             namespace: "file"
                         }
                     }))
-                }
+                };
             }
 
             return {
@@ -298,7 +304,7 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 loader: "css",
                 resolveDir: path.dirname(args.path),
                 watchFiles: includedFiles
-            }
+            };
         }));
 
         build.onEnd(async result => {
@@ -306,15 +312,15 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
                 if (typeof opts.generateHTML === "string") {
                     opts.generateHTML = {
                         sourceFile: opts.generateHTML
-                    }
+                    };
                 }
 
                 const outDir = buildOpts.outdir
                     ? buildOpts.outdir
                     : buildOpts.outfile
-                    ? path.dirname(buildOpts.outfile)
-                    : undefined;
-                
+                        ? path.dirname(buildOpts.outfile)
+                        : undefined;
+
                 opts.generateHTML.trimPath ??= outDir;
                 opts.generateHTML.pathPrefix ??= "/";
                 opts.generateHTML.outFile ??= outDir && path.join(outDir, "index.html");
@@ -325,4 +331,4 @@ const vuePlugin = (opts: Options = {}) => <esbuild.Plugin>{
     }
 };
 
-export = vuePlugin
+export = vuePlugin;

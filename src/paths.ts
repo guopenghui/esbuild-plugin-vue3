@@ -3,7 +3,7 @@ import { Options } from "./options";
 import * as fs from 'fs';
 import { parseConfigFileTextToJson } from "typescript";
 
-type Rule = { regex: RegExp, replacement: string }
+type Rule = { regex: RegExp, replacement: string; };
 
 const rules: Rule[] = [];
 
@@ -37,7 +37,7 @@ async function loadFromTsconfig(path: string) {
         return;
     }
 
-    const { config: tsconfig, error } = parseConfigFileTextToJson(path, (await fs.promises.readFile(path)).toString())
+    const { config: tsconfig, error } = parseConfigFileTextToJson(path, (await fs.promises.readFile(path)).toString());
     if (error) {
         throw new Error(`Failed to parse tsconfig.json: ${JSON.stringify(error)}`);
     }

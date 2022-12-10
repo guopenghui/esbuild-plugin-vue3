@@ -16,7 +16,7 @@ export type Options = {
      * If enabled, Vue will emit code for rendering SSR pages.
      */
     renderSSR?: boolean;
-    
+
     /**
      * @deprecated Use pathAliases instead.
      */
@@ -41,7 +41,7 @@ export type Options = {
      * If set to an object with a "random" property, a random ID will be generated.
      * If "random" is set to a string, the random generator will be seeded with said string.
      */
-    scopeId?: "hash" | { random: true | string };
+    scopeId?: "hash" | { random: true | string; };
 
     /**
      * Disable the caching of rendered SFC parts.
@@ -63,5 +63,5 @@ export type Options = {
     postcss?: {
         options?: any;
         plugins?: any[];
-    }
-}
+    };
+};
